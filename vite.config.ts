@@ -14,6 +14,7 @@ export default defineConfig({
             '@utils': path.resolve(__dirname, './src/utils'), // @utils теперь ссылается на src/utils
             '@services': path.resolve(__dirname, './src/services'), // @services теперь ссылается на src/services
             '@assets': path.resolve(__dirname, './src/assets'), // @assets теперь ссылается на src/assets
+            '@types': path.resolve(__dirname, './src/types'), // @types теперь ссылается на src/types
         },
     },
 });

@@ -33,6 +33,7 @@
       "@utils/*": ["utils/*"],
       "@services/*": ["services/*"],
       "@assets/*": ["assets/*"],
+      "@types/*": ["types/*"],
     }
   },
   "include": ["src"]

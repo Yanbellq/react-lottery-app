@@ -1,4 +1,13 @@
-@import "tailwindcss";
+/* src/styles/App.css */
+
+@import 'tailwindcss';
+
+@theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --font-sans: var(--font-geist-sans);
+    --font-mono: var(--font-geist-mono);
+}
 
 .tg {
     @apply text-green-700;

@@ -1,8 +1,8 @@
 import React from 'react';
-import type { Participant } from '@/types/participant';
+import type { IUser } from '@/types/user';
 
 interface WinnerCardProps {
-    winner: Participant;
+    winner: IUser;
     onRemove: (id: string) => void;
 }
 

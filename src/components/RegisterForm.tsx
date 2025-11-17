@@ -1,44 +1,35 @@
 import React, { useState } from 'react';
-import type { Participant, FormErrors } from '@/types/participant';
-import {
-    validateEmail,
-    validatePhone,
-    validateDateNotFuture,
-    formatPhoneNumber,
-} from '@utils/validation';
+import type { FormErrors } from '@/types/participant';
+import type { IUser } from '@/types/user';
+import { validateEmail, formatPhoneNumber } from '@utils/validation';
 import Input from '@components/ui/Input';
 import Button from '@components/ui/Button';
 
 interface RegisterFormProps {
-    onAddParticipant: (participant: Omit<Participant, 'id'>) => void;
-    participants: Participant[];
+    onAddParticipant: (participant: Omit<IUser, 'id'>) => void;
+    participants: IUser[];
 }
 
 export default function RegisterForm({ onAddParticipant, participants }: RegisterFormProps) {
     const [formData, setFormData] = useState({
         name: '',
-        dateOfBirth: '',
         email: '',
-        phoneNumber: '',
+        password: '',
+        avatar: '',
     });
 
     const [errors, setErrors] = useState<FormErrors>({});
     const [touched, setTouched] = useState({
         name: false,
-        dateOfBirth: false,
         email: false,
-        phoneNumber: false,
+        password: false,
+        avatar: false,
     });
 
     const validateField = (fieldName: keyof typeof formData, value: string): string | undefined => {
         switch (fieldName) {
             case 'name':
                 return value.trim() === '' ? 'This value is required.' : undefined;
-
-            case 'dateOfBirth':
-                if (value === '') return 'This value is required.';
-                if (!validateDateNotFuture(value)) return 'Date of birth cannot be in the future.';
-                return undefined;
 
             case 'email':
                 if (value.trim() === '') return 'This value is required.';
@@ -49,11 +40,13 @@ export default function RegisterForm({ onAddParticipant, participants }: Registe
                 }
                 return undefined;
 
-            case 'phoneNumber':
+            case 'password':
                 if (value.trim() === '') return 'This value is required.';
-                if (!validatePhone(value))
-                    return 'Please enter a valid phone number: (XXX) XXX-XXXX';
+                if (value.length < 6) return 'Password must be at least 6 characters long.';
                 return undefined;
+
+            case 'avatar':
+                return value.trim() === '' ? 'This value is required.' : undefined;
 
             default:
                 return undefined;
@@ -84,43 +77,72 @@ export default function RegisterForm({ onAddParticipant, participants }: Registe
         setErrors(prev => ({ ...prev, [name]: error }));
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         const newErrors: FormErrors = {
             name: validateField('name', formData.name),
-            dateOfBirth: validateField('dateOfBirth', formData.dateOfBirth),
             email: validateField('email', formData.email),
-            phoneNumber: validateField('phoneNumber', formData.phoneNumber),
+            password: validateField('password', formData.password),
+            avatar: validateField('avatar', formData.avatar),
         };
 
         setErrors(newErrors);
         setTouched({
             name: true,
-            dateOfBirth: true,
             email: true,
-            phoneNumber: true,
+            password: true,
+            avatar: true,
         });
 
         const hasErrors = Object.values(newErrors).some(error => error !== undefined);
 
         if (!hasErrors) {
-            onAddParticipant(formData);
+            try {
+                const resp = await fetch('https://api.escuelajs.co/api/v1/users/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: formData.name,
+                        email: formData.email,
+                        password: formData.password,
+                        avatar: formData.avatar,
+                    }),
+                });
 
-            setFormData({
-                name: '',
-                dateOfBirth: '',
-                email: '',
-                phoneNumber: '',
-            });
+                if (!resp.ok) {
+                    throw new Error('Failed to register user');
+                }
 
-            setErrors({});
-            setTouched({
-                name: false,
-                dateOfBirth: false,
-                email: false,
-                phoneNumber: false,
-            });
+                const user = await resp.json();
+
+                onAddParticipant({
+                    name: user.name,
+                    email: user.email,
+                    password: user.password,
+                    avatar: user.avatar,
+                    role: user.role,
+                });
+
+                setFormData({
+                    name: '',
+                    email: '',
+                    password: '',
+                    avatar: '',
+                });
+
+                setErrors({});
+                setTouched({
+                    name: false,
+                    email: false,
+                    password: false,
+                    avatar: false,
+                });
+            } catch (error) {
+                alert(error);
+            }
         }
     };
 
@@ -154,20 +176,6 @@ export default function RegisterForm({ onAddParticipant, participants }: Registe
                 />
 
                 <Input
-                    type="text"
-                    name="dateOfBirth"
-                    label="Date of Birth"
-                    placeholder="mm.dd.yyyy"
-                    value={formData.dateOfBirth}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    error={
-                        errors.dateOfBirth && touched.dateOfBirth ? errors.dateOfBirth : undefined
-                    }
-                    isRequired
-                />
-
-                <Input
                     type="email"
                     name="email"
                     label="Email"
@@ -181,16 +189,26 @@ export default function RegisterForm({ onAddParticipant, participants }: Registe
 
                 <Input
                     type="text"
-                    name="phoneNumber"
-                    label="Phone number"
-                    placeholder="Enter Phone number"
-                    value={formData.phoneNumber}
+                    name="password"
+                    label="Password"
+                    placeholder="Enter password"
+                    value={formData.password}
                     onChange={handleChange}
                     onBlur={handleBlur}
                     maxLength={14}
-                    error={
-                        errors.phoneNumber && touched.phoneNumber ? errors.phoneNumber : undefined
-                    }
+                    error={errors.password && touched.password ? errors.password : undefined}
+                    isRequired
+                />
+
+                <Input
+                    type="text"
+                    name="avatar"
+                    label="Avatar"
+                    placeholder="Enter avatar URL"
+                    value={formData.avatar}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    error={errors.avatar && touched.avatar ? errors.avatar : undefined}
                     isRequired
                 />
 

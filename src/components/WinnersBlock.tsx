@@ -1,10 +1,10 @@
 import React from 'react';
-import type { Participant } from '@/types/participant';
+import type { IUser } from '@/types/user';
 import Button from '@components/ui/Button';
 import WinnerCard from '@components/WinnerCard';
 
 interface WinnersBlockProps {
-    winners: Participant[];
+    winners: IUser[];
     onRemoveWinner: (id: string) => void;
     className?: string;
     selectRandomWinner: () => void;

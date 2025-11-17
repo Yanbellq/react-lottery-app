@@ -11,6 +11,8 @@ export interface FormErrors {
     dateOfBirth?: string;
     email?: string;
     phoneNumber?: string;
+    password?: string;
+    avatar?: string;
 }
 
 export type SortField = 'name' | 'dateOfBirth';

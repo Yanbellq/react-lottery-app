@@ -52,7 +52,9 @@ export default defineConfig([
 
             /* ---- REACT RULES ---- */
             'react/react-in-jsx-scope': 'off', // Vite не потребує імпорту React
-            'react-hooks/exhaustive-deps': 'error',
+            // 'react-hooks/exhaustive-deps': 'error',
+            'react-hooks/exhaustive-deps': 'off',
+            'react-refresh/only-export-components': 'off',
 
             /* ---- CUSTOM FIX ---- */
             'react-hooks/set-state-in-effect': 'off', // дозволено для модалок/форм

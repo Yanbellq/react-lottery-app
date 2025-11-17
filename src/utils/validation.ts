@@ -26,3 +26,7 @@ export const formatPhoneNumber = (value: string): string => {
         return `(${numbers.slice(0, 3)}) ${numbers.slice(3, 6)}-${numbers.slice(6, 10)}`;
     }
 };
+
+export const validatePassword = (password: string): boolean => {
+    return password.length >= 6;
+};

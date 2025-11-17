@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import type { Participant, SortField, SortOrder } from '@/types/participant';
+import type { SortField, SortOrder } from '@/types/participant';
+import type { IUser } from '@/types/user';
 import Button from '@components/ui/Button';
 import Modal from '@components/ui/Modal';
+import { Link } from '@mui/material';
 
 interface ParticipantsTableProps {
-    participants: Participant[];
-    onEdit: (participant: Participant) => void;
+    participants: IUser[];
+    onEdit: (participant: IUser) => void;
     onDelete: (id: string) => void;
     sortField: SortField | null;
     sortOrder: SortOrder;
@@ -36,17 +38,9 @@ export default function ParticipantsTable({
     sortOrder,
     onSort,
 }: ParticipantsTableProps) {
-    const [deleteConfirm, setDeleteConfirm] = useState<Participant | null>(null);
+    const [deleteConfirm, setDeleteConfirm] = useState<IUser | null>(null);
 
-    const formatDate = (dateString: string): string => {
-        const date = new Date(dateString);
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-        return `${month}.${day}.${year}`;
-    };
-
-    const handleDeleteClick = (participant: Participant) => {
+    const handleDeleteClick = (participant: IUser) => {
         setDeleteConfirm(participant);
     };
 
@@ -79,22 +73,14 @@ export default function ParticipantsTable({
                                             sortOrder={sortOrder}
                                         />
                                     </th>
-                                    <th
-                                        className="text-left p-3 font-semibold text-gray-700 cursor-pointer hover:bg-gray-200"
-                                        onClick={() => onSort('dateOfBirth')}
-                                    >
-                                        Date of Birth{' '}
-                                        <SortIcon
-                                            field="dateOfBirth"
-                                            sortField={sortField}
-                                            sortOrder={sortOrder}
-                                        />
-                                    </th>
                                     <th className="text-left p-3 font-semibold text-gray-700">
                                         Email
                                     </th>
                                     <th className="text-left p-3 font-semibold text-gray-700">
-                                        Phone number
+                                        Password
+                                    </th>
+                                    <th className="text-center p-3 font-semibold text-gray-700">
+                                        Role
                                     </th>
                                     <th className="text-center p-3 font-semibold text-gray-700">
                                         Actions
@@ -108,14 +94,16 @@ export default function ParticipantsTable({
                                         className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
                                     >
                                         <td className="p-3 text-gray-500">{index + 1}</td>
-                                        <td className="p-3 text-gray-500">{participant.name}</td>
                                         <td className="p-3 text-gray-500">
-                                            {formatDate(participant.dateOfBirth)}
+                                            <Link href={`/users/${participant.id}`}>
+                                                {participant.name}
+                                            </Link>
                                         </td>
                                         <td className="p-3 text-gray-500">{participant.email}</td>
                                         <td className="p-3 text-gray-500">
-                                            {participant.phoneNumber}
+                                            {participant.password}
                                         </td>
+                                        <td className="p-3 text-gray-500">{participant.role}</td>
                                         <td className="p-3">
                                             <div className="flex gap-2 justify-center">
                                                 <Button

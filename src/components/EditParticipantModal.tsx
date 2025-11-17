@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import type { Participant, FormErrors } from '@/types/participant';
-import {
-    validateEmail,
-    validatePhone,
-    validateDateNotFuture,
-    formatPhoneNumber,
-} from '@utils/validation';
+import type { FormErrors } from '@/types/participant';
+import type { IUser } from '@/types/user';
+import { validateEmail, formatPhoneNumber } from '@utils/validation';
 import Modal from '@components/ui/Modal';
 import Input from '@components/ui/Input';
 import Button from '@components/ui/Button';
@@ -13,9 +9,9 @@ import Button from '@components/ui/Button';
 interface EditParticipantModalProps {
     isOpen: boolean;
     onClose: () => void;
-    participant: Participant | null;
-    onUpdate: (participant: Participant) => void;
-    participants: Participant[];
+    participant: IUser | null;
+    onUpdate: (participant: IUser) => void;
+    participants: IUser[];
 }
 
 export default function EditParticipantModal({
@@ -27,9 +23,9 @@ export default function EditParticipantModal({
 }: EditParticipantModalProps) {
     const [formData, setFormData] = useState({
         name: '',
-        dateOfBirth: '',
         email: '',
-        phoneNumber: '',
+        password: '',
+        avatar: '',
     });
 
     const [errors, setErrors] = useState<FormErrors>({});
@@ -38,9 +34,9 @@ export default function EditParticipantModal({
         if (participant) {
             setFormData({
                 name: participant.name,
-                dateOfBirth: participant.dateOfBirth,
                 email: participant.email,
-                phoneNumber: participant.phoneNumber,
+                password: participant.password,
+                avatar: participant.avatar,
             });
             setErrors({});
         }
@@ -51,31 +47,22 @@ export default function EditParticipantModal({
             case 'name':
                 return value.trim() === '' ? 'This value is required.' : undefined;
 
-            case 'dateOfBirth':
-                if (value === '') return 'This value is required.';
-                if (!validateDateNotFuture(value)) return 'Date of birth cannot be in the future.';
-                return undefined;
-
             case 'email':
                 if (value.trim() === '') return 'This value is required.';
                 if (!validateEmail(value)) return 'Please enter a valid email address.';
-                // Check for duplicate email (excluding current participant)
-                if (
-                    participants.some(
-                        p =>
-                            p.id !== participant?.id &&
-                            p.email.toLowerCase() === value.toLowerCase()
-                    )
-                ) {
+                // Check for duplicate email
+                if (participants.some(p => p.email.toLowerCase() === value.toLowerCase())) {
                     return 'A participant with this email already exists.';
                 }
                 return undefined;
 
-            case 'phoneNumber':
+            case 'password':
                 if (value.trim() === '') return 'This value is required.';
-                if (!validatePhone(value))
-                    return 'Please enter a valid phone number: (XXX) XXX-XXXX';
+                if (value.length < 6) return 'Password must be at least 6 characters long.';
                 return undefined;
+
+            case 'avatar':
+                return value.trim() === '' ? 'This value is required.' : undefined;
 
             default:
                 return undefined;
@@ -93,14 +80,14 @@ export default function EditParticipantModal({
         setFormData(prev => ({ ...prev, [name]: processedValue }));
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         const newErrors: FormErrors = {
             name: validateField('name', formData.name),
-            dateOfBirth: validateField('dateOfBirth', formData.dateOfBirth),
             email: validateField('email', formData.email),
-            phoneNumber: validateField('phoneNumber', formData.phoneNumber),
+            password: validateField('password', formData.password),
+            avatar: validateField('avatar', formData.avatar),
         };
 
         setErrors(newErrors);
@@ -108,11 +95,37 @@ export default function EditParticipantModal({
         const hasErrors = Object.values(newErrors).some(error => error !== undefined);
 
         if (!hasErrors && participant) {
-            onUpdate({
-                ...participant,
-                ...formData,
-            });
-            onClose();
+            try {
+                const resp = await fetch(
+                    `https://api.escuelajs.co/api/v1/users/${participant.id}`,
+                    {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            name: formData.name,
+                            email: formData.email,
+                            password: formData.password,
+                            avatar: formData.avatar,
+                        }),
+                    }
+                );
+
+                if (!resp.ok) {
+                    throw new Error('Failed to update user');
+                }
+
+                const updatedUser = await resp.json();
+
+                onUpdate({
+                    ...participant,
+                    ...updatedUser,
+                });
+                onClose();
+            } catch (error) {
+                alert(error);
+            }
         }
     };
 
@@ -131,16 +144,6 @@ export default function EditParticipantModal({
                 />
 
                 <Input
-                    type="date"
-                    name="dateOfBirth"
-                    label="Date of Birth"
-                    value={formData.dateOfBirth}
-                    onChange={handleChange}
-                    error={errors.dateOfBirth}
-                    isRequired
-                />
-
-                <Input
                     type="email"
                     name="email"
                     label="Email"
@@ -153,13 +156,24 @@ export default function EditParticipantModal({
 
                 <Input
                     type="text"
-                    name="phoneNumber"
-                    label="Phone number"
-                    placeholder="Enter Phone number"
-                    value={formData.phoneNumber}
+                    name="password"
+                    label="Password"
+                    placeholder="Enter password"
+                    value={formData.password}
                     onChange={handleChange}
                     maxLength={14}
-                    error={errors.phoneNumber}
+                    error={errors.password}
+                    isRequired
+                />
+
+                <Input
+                    type="text"
+                    name="avatar"
+                    label="Avatar"
+                    placeholder="Enter avatar URL"
+                    value={formData.avatar}
+                    onChange={handleChange}
+                    error={errors.avatar}
                     isRequired
                 />
 
